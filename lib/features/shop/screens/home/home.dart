@@ -16,6 +16,7 @@ import '../../../../common/widgets/texts/section_heading.dart';
 import '../../../../utils/constants/colors.dart';
 import '../../../../utils/constants/image_strings.dart';
 import '../../../../utils/constants/sizes.dart';
+import '../../../authentication/controllers/banner_controller.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -54,45 +55,68 @@ class HomeScreen extends StatelessWidget {
                 padding: const EdgeInsets.all(TSizes.defaultSpace),
                 child: Column(
                   children: [
-                    CarouselSlider(
-                      options: CarouselOptions(
-                        onPageChanged: (index, _) =>
-                            controller.updatePageIndicator(index),
-                        viewportFraction: 1,
-                      ),
-                      items: const [
-                        TRoundedImage(imageUrl: TImages.promoBanner1),
-                        TRoundedImage(imageUrl: TImages.promoBanner2),
-                        TRoundedImage(imageUrl: TImages.promoBanner3),
-                      ],
-                    ),
+                    const TPromoSlider(),
                     const SizedBox(height: TSizes.spaceBtwItems),
-                    Center(
-                      child: Obx(
-                        () => Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            for (int i = 0; i < 3; i++)
-                              TCircularContainer(
-                                width: 20,
-                                height: 4,
-                                margin: EdgeInsets.only(right: 10),
-                                backgroundColor:
-                                    controller.carousalCurrentIndex.value == i
-                                        ? TColors.primary
-                                        : TColors.grey,
-                              ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: TSizes.spaceBtwItems),
-                    TGridLayout(itemCount: 6, itemBuilder: (_,index)=>const TProductCardVertical())
+                    TGridLayout(
+                        itemCount: 6,
+                        itemBuilder: (_, index) => const TProductCardVertical())
                   ],
                 ))
           ],
         ),
       ),
+    );
+  }
+}
+
+class TPromoSlider extends StatelessWidget {
+  const TPromoSlider({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = Get.put(BannerController());
+    return Obx(
+          (){
+        return Column(children: [
+          CarouselSlider(
+            options: CarouselOptions(
+              onPageChanged: (index, _) =>
+                  controller.updatePageIndicator(index),
+              viewportFraction: 1,
+            ),
+            items: controller.banners
+                .map((banner) =>
+                TRoundedImage(
+                    imageUrl: banner.imageUrl,
+                    isNetworkImage: true,
+                    onPressed: () => Get.toNamed(banner.targetScreen)))
+                .toList(),
+          ),
+          const SizedBox(height: TSizes.spaceBtwItems),
+          Center(
+            child: Obx(
+                  () =>
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      for (int i = 0; i < controller.banners.length; i++)
+                        TCircularContainer(
+                          width: 20,
+                          height: 4,
+                          margin: EdgeInsets.only(right: 10),
+                          backgroundColor: controller.carousalCurrentIndex
+                              .value == i
+                              ? TColors.primary
+                              : TColors.grey,
+                        ),
+                    ],
+                  ),
+            ),
+          ),
+        ]);
+      },
     );
   }
 }
@@ -105,28 +129,25 @@ class ThomeCategories extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final categoryController = Get.put(CategoryController());
-    return Obx(
-        (){
-          return SizedBox(
-            height: 80,
-            child: ListView.builder(
-              shrinkWrap: true,
-              itemCount: categoryController.featuredCategories.length,
-              scrollDirection: Axis.horizontal,
-              itemBuilder: (_, index) {
-                final category = categoryController.featuredCategories[index];
-                return TVerticalImageText(
-                  image: category.image,
-                  title: category.name,
-                  // image: TImages.productImage1,
-                  // title: 'shoes',
-                  onTap: () => Get.to(()=>const SubCatagoriesScreen()),
-
-                );
-              },
-            ),
-          );
-        }
-    );
+    return Obx(() {
+      return SizedBox(
+        height: 80,
+        child: ListView.builder(
+          shrinkWrap: true,
+          itemCount: categoryController.featuredCategories.length,
+          scrollDirection: Axis.horizontal,
+          itemBuilder: (_, index) {
+            final category = categoryController.featuredCategories[index];
+            return TVerticalImageText(
+              image: category.image,
+              title: category.name,
+              // image: TImages.productImage1,
+              // title: 'shoes',
+              onTap: () => Get.to(() => const SubCatagoriesScreen()),
+            );
+          },
+        ),
+      );
+    });
   }
 }
